@@ -1,196 +1,148 @@
 # 🔬 Smart Research Agent
 
 > An AI-powered multi-step research agent that **plans**, **researches**, and **reports** — automatically.
+> Built with Python, Streamlit, and HuggingFace (Qwen2.5-72B) — completely free to use!
+
+---
+
+## 🚀 Live Demo
+
+🔗 **[Click here to try the app](https://smart-research-agent.streamlit.app/)**
 
 ---
 
 ## 📦 Project Structure
 
 ```
-smart_research_agent/
-├── app.py          ← Single-file Streamlit application (everything lives here)
-└── README.md       ← This file
+smart-research-agent/
+├── app.py            ← Main Streamlit application
+├── requirements.txt  ← Python packages list
+└── README.md         ← This file
 ```
 
 ---
 
-## ⚡ Quickstart (Run in 3 Steps)
+## ⚙️ How It Works
 
-### Step 1 — Install dependencies
+The agent follows a 3-step workflow:
 
+```
+User types a topic
+        ↓
+STEP 1 — PLAN      Break topic into 4 sub-questions
+        ↓
+STEP 2 — RESEARCH  Answer each sub-question using AI
+        ↓
+STEP 3 — REPORT    Write a full structured report
+```
+
+---
+
+## 🛠️ Tech Stack
+
+| Technology | Purpose |
+|-----------|---------|
+| Python | Core programming language |
+| Streamlit | Web app UI framework |
+| HuggingFace API | Free AI model access |
+| Qwen2.5-72B | LLM for research & writing |
+
+---
+
+## 💻 Run Locally
+
+### Step 1 — Install packages
 ```bash
-pip install streamlit anthropic
+pip install streamlit huggingface_hub
 ```
 
 ### Step 2 — Run the app
-
 ```bash
 streamlit run app.py
 ```
 
-### Step 3 — Open in your browser
-
-Streamlit auto-opens at → **http://localhost:8501**
-
-Enter your Anthropic API key in the sidebar (get one free at https://console.anthropic.com), type a topic, and click **Run Research Agent**.
-
----
-
-## 🔑 Getting Your API Key (Free)
-
-1. Go to **https://console.anthropic.com**
-2. Create a free account
-3. Navigate to **API Keys** → click **Create Key**
-4. Copy and paste it into the app's sidebar
-
-> Free tier gives you generous credits to test the app.
-
----
-
-## 🧠 How the Agent Works — Step by Step
-
-The agent follows a 3-phase workflow inspired by real research methodology:
-
+### Step 3 — Open browser
 ```
-User Input (topic)
-       │
-       ▼
-┌─────────────┐
-│  STEP 1     │  PLAN
-│  plan_sub_  │  Ask Claude: "Break this topic into N focused sub-questions"
-│  questions()│  → returns ["What is X?", "How does X work?", ...]
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│  STEP 2     │  RESEARCH  (loop — one API call per question)
-│  research_  │  Ask Claude: "Answer this specific sub-question in depth"
-│  sub_       │  → builds qa_pairs = [{"question":..., "answer":...}, ...]
-│  question() │
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│  STEP 3     │  REPORT
-│  generate_  │  Ask Claude: "Synthesise all findings into a structured report"
-│  final_     │  → returns a Markdown report with sections + conclusion
-│  report()   │
-└─────────────┘
+http://localhost:8501
 ```
 
----
-
-## 🗂️ Code Walkthrough — Every Function Explained
-
-### `get_client(key)`
-Creates an authenticated Anthropic SDK client. Nothing fancy — just wraps `anthropic.Anthropic(api_key=key)` so the rest of the code stays clean.
+### Step 4 — Get Free API Key
+1. Go to → **https://huggingface.co/settings/tokens**
+2. Click **"New token"** → Role: **Read**
+3. Copy token (`hf_...`) → paste in sidebar
 
 ---
 
-### `call_claude(client, system, user, model)`
-**The core building block** — every AI call goes through here.
+## 🔑 API Key Setup (Free)
 
-| Parameter | What it does |
-|-----------|--------------|
-| `system`  | Sets Claude's *role* (e.g. "You are a research planner…") |
-| `user`    | The actual question / task you're sending |
-| `model`   | Which Claude model to use (Sonnet = fast+smart, Haiku = fastest) |
+**No credit card needed!** HuggingFace tokens are completely free.
 
-Returns: a plain Python string with Claude's reply.
+### For Local Use:
+Paste your `hf_...` token in the sidebar when running locally.
 
----
-
-### `plan_sub_questions(client, topic, n, model)`
-**STEP 1 — PLAN**
-
-Sends this system prompt:
-> "Output ONLY a numbered list of N sub-questions that cover this topic."
-
-Then parses the numbered list into a Python `list[str]`.
-
-Why this works: forcing Claude to output *only* a list (no preamble) makes parsing trivial.
-
----
-
-### `research_sub_question(client, topic, question, model)`
-**STEP 2 — RESEARCH**
-
-Called once per sub-question in a `for` loop.
-
-System prompt sets Claude as an "expert research assistant" and asks for 2–3 solid paragraphs.
-
-The `topic` is passed as context so answers stay relevant to the broader subject.
-
----
-
-### `generate_final_report(client, topic, qa_pairs, model)`
-**STEP 3 — REPORT**
-
-Builds a context string from all Q&A pairs, then asks Claude to write a structured Markdown report with:
-- Executive Summary
-- One section per finding
-- Conclusion
-
----
-
-## 🎛️ Sidebar Settings
-
-| Setting | What it controls |
-|---------|-----------------|
-| **API Key** | Your Anthropic key (password-masked) |
-| **Sub-questions** | Slider 3–6: more = richer report, slower |
-| **Model** | Sonnet (recommended) or Haiku (faster/cheaper) |
+### For Deployed App (Streamlit Cloud):
+Add this in Streamlit Cloud → Advanced Settings → Secrets:
+```
+HF_API_KEY = "hf_your_token_here"
+```
 
 ---
 
 ## 📊 Example Topics to Try
 
-| Topic | What you'll get |
-|-------|----------------|
-| "The impact of quantum computing on cybersecurity" | Technical depth + practical implications |
-| "History and future of renewable energy" | Timeline + policy + technology |
-| "How large language models are trained" | Architecture, data, RLHF explained |
-| "Effects of sleep deprivation on cognitive performance" | Neuroscience + practical health insights |
-| "Rise of electric vehicles in India" | Market, infrastructure, policy, challenges |
+| Topic | Output |
+|-------|--------|
+| Impact of AI on jobs | Career trends + future predictions |
+| Future of electric vehicles in India | Market + infrastructure + policy |
+| How does machine learning work | Concepts + algorithms explained |
+| Effects of social media on students | Research + mental health insights |
+| Climate change solutions 2025 | Technology + policy + innovation |
 
 ---
 
-## 🧩 Architecture Diagram
+## 🧩 Agent Architecture
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    Streamlit Frontend                    │
-│  ┌──────────────┐   ┌────────────────┐  ┌───────────┐  │
-│  │  Text Input  │   │  Progress Bar  │  │  Report   │  │
-│  │  (topic)     │   │  + QA Cards    │  │  + DL btn │  │
-│  └──────┬───────┘   └───────▲────────┘  └─────▲─────┘  │
-│         │                   │                  │         │
-└─────────┼───────────────────┼──────────────────┼─────────┘
-          │                   │                  │
-          ▼                   │                  │
-    ┌─────────────────────────────────────────────────┐
-    │              Python Agent Logic                  │
-    │  plan_sub_questions() → [q1, q2, q3, q4]        │
-    │  for each q: research_sub_question()  ──────────►│
-    │  generate_final_report(all answers)             │
-    └──────────────────────┬──────────────────────────┘
-                           │  HTTPS API calls
-                           ▼
-              ┌─────────────────────────┐
-              │   Anthropic Claude API   │
-              │   /v1/messages endpoint  │
-              └─────────────────────────┘
+┌─────────────────────────────────────┐
+│         Streamlit Frontend          │
+│  Topic Input → Progress → Report    │
+└──────────────┬──────────────────────┘
+               │
+               ▼
+┌─────────────────────────────────────┐
+│         Python Agent Logic          │
+│                                     │
+│  1. plan_sub_questions()            │
+│     → ["Q1", "Q2", "Q3", "Q4"]     │
+│                                     │
+│  2. research_sub_question() x 4     │
+│     → answers for each question     │
+│                                     │
+│  3. generate_final_report()         │
+│     → structured markdown report    │
+└──────────────┬──────────────────────┘
+               │ API calls
+               ▼
+┌─────────────────────────────────────┐
+│    HuggingFace Inference API        │
+│    Model: Qwen2.5-72B-Instruct      │
+│    Cost: FREE                       │
+└─────────────────────────────────────┘
 ```
 
 ---
 
-## 🔧 Customisation Ideas
+## 🚀 Deploy on Streamlit Cloud (Free)
 
-- **Add real web search**: Integrate `serpapi` or `duckduckgo-search` to fetch live URLs before answering each sub-question
-- **Export to PDF**: Use `fpdf2` or `reportlab` to convert the Markdown report to PDF
-- **Memory across sessions**: Store past reports in `sqlite3` or a JSON file
-- **Multi-language support**: Add a language selector and append "Respond in [language]" to the system prompt
-- **Streaming output**: Use `client.messages.stream()` for word-by-word output
+1. Push code to GitHub (public repo)
+2. Go to → **https://share.streamlit.io**
+3. Click **"Create app"**
+4. Select your repo → file: `app.py`
+5. Click **"Advanced settings"** → Secrets:
+   ```
+   HF_API_KEY = "hf_your_token_here"
+   ```
+6. Click **"Deploy!"** → get your live link
 
 ---
 
@@ -198,11 +150,31 @@ Builds a context string from all Q&A pairs, then asks Claude to write a structur
 
 | Error | Fix |
 |-------|-----|
-| `AuthenticationError` | Check your API key — make sure it starts with `sk-ant-` |
-| `RateLimitError` | Wait 30 seconds, or reduce the number of sub-questions |
-| `ModuleNotFoundError: streamlit` | Run `pip install streamlit anthropic` |
-| App opens but blank | Hard-refresh the browser (Ctrl+Shift+R) |
+| `401 Unauthorized` | Wrong HF token — regenerate at huggingface.co/settings/tokens |
+| `404 Not Found` | Model unavailable — already fixed, using Qwen2.5-72B |
+| `Model is loading` | Wait 30 seconds — free tier cold start |
+| `ModuleNotFoundError` | Run `pip install streamlit huggingface_hub` |
+| App blank on open | Hard refresh browser (Ctrl + Shift + R) |
 | Port already in use | Run `streamlit run app.py --server.port 8502` |
+
+---
+
+## Features
+
+- Fully automatic research pipeline
+- AI breaks any topic into smart sub-questions
+- Each sub-question answered in detail
+- Final structured report with summary + conclusion
+- Download report as .md file
+- Clean modern UI
+- 100% free — no paid API needed
+
+---
+
+## Author
+
+**Aarzoo** — AI & Python Developer
+Built as part of an AI-based agentic automation project.
 
 ---
 
