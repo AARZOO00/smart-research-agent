@@ -36,11 +36,18 @@ st.set_page_config(
     page_icon="🔬",
     layout="wide",
 )
-    
+
 # ── Model to use — free on Hugging Face Inference API ─────────────────────────
 # Mistral-7B is fast, free, and great for structured research tasks.
 HF_MODEL = "Qwen/Qwen2.5-72B-Instruct"
-HF_API_KEY = st.secrets["HF_API_KEY"]
+# Auto-detect: deployed app pe secrets se, local pe sidebar se
+try:
+    HF_API_KEY = st.secrets["HF_API_KEY"]
+    KEY_FROM_SECRETS = True
+except Exception:
+    HF_API_KEY = None
+    KEY_FROM_SECRETS = False
+
 # ═════════════════════════════════════════════════════════════════════════════
 #  CUSTOM CSS  — clean, readable, beginner-friendly dark-accent theme
 # ═════════════════════════════════════════════════════════════════════════════
@@ -130,24 +137,20 @@ st.markdown(
 with st.sidebar:
     st.header("⚙️ Settings")
 
-    # ── API Key input (password-masked) ──────────────────────────────────────
-    api_key = st.text_input(
-        "🤗 Hugging Face Token",
-        type="password",
-        placeholder="hf_...",
-        help=(
-            "Get your FREE token at:\n"
-            "https://huggingface.co/settings/tokens\n\n"
-            "Click 'New token' → Role: Read → Copy & paste here."
-        ),
-    )
-
-    st.info(
-        "🆓 **Free to use!**\n\n"
-        "Hugging Face tokens are completely free.\n"
-        "No billing or credit card needed.",
-        icon="✅",
-    )
+    # ── API Key: Auto from secrets (deployed) OR manual input (local) ───────────
+    if KEY_FROM_SECRETS:
+        # Deployed app — key already loaded from Streamlit secrets
+        api_key = HF_API_KEY
+        st.success("🔐 API Key loaded automatically!", icon="✅")
+    else:
+        # Local run — user enters key manually
+        api_key = st.text_input(
+            "🤗 Hugging Face Token",
+            type="password",
+            placeholder="hf_...",
+            help="Get free token at: huggingface.co/settings/tokens",
+        )
+        st.info("🆓 Token is FREE at huggingface.co/settings/tokens", icon="ℹ️")
 
     st.markdown("---")
 
@@ -313,7 +316,7 @@ if run_button:
         st.error("⚠️ Please enter a research topic before running the agent.")
         st.stop()
 
-    if not api_key.strip():
+    if not KEY_FROM_SECRETS and not api_key.strip():
         st.error("⚠️ Please enter your Hugging Face token in the sidebar.")
         st.stop()
 
